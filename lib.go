@@ -7,10 +7,6 @@ package main
 // Los elementos del arreglo pueden ser modificados en el main.
 // El arreglo del main debe estar ORDENADO de MENOR a MAYOR.
 // Este codigo no admite arreglos NO ORDENADOS.
-//
-//
-//
-//
 
 import "fmt"
 
@@ -31,14 +27,17 @@ func agregarOrdenados(array [10]int, nuevoElemento int) {
 		} else if array[i] > nuevoElemento {
 			arraySplit2[i] = array[i]
 		}
+
 	}
+
 	for j := 0; j < longitudSplit; j++ {
 		resultado[j] = arraySplit[j]
 		contador++
 	}
+	fmt.Println("Contador: ", contador)
 	resultado[contador] = nuevoElemento
 
-	if contador+1 != len(resultado)-1 {
+	if contador+1 != len(resultado) {
 		for k := contador + 1; k <= len(resultado)-1; k++ {
 			resultado[contador+1] = arraySplit2[contador]
 			contador++
@@ -51,6 +50,6 @@ func agregarOrdenados(array [10]int, nuevoElemento int) {
 func main() {
 	array := [10]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 
-	nuevoElemento := 89
+	nuevoElemento := -5
 	agregarOrdenados(array, nuevoElemento)
 }
