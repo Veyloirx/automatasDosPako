@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 //generar un diccionario de datos tomando como datos tomando como keys = arreglo y como data el arreglo data
 //data debe ser igual o mayor a arreglo
 
@@ -14,5 +16,5 @@ func main() {
 		}
 		diccionario[data[i]] = arreglo[i]
 	}
-
+	fmt.Println(diccionario)
 }
