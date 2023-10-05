@@ -1,0 +1,5 @@
+default = A
+movimientos = 0
+turno = A
+movimientos_A = []
+movimientos_B = []
