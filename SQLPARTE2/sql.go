@@ -5,10 +5,9 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"unicode"
 )
 
-func LecturaTokens() map[int]string {
+func LecturaTokens() map[string]int {
 	tokensBytes, err := os.ReadFile("tokens.txt")
 	if err != nil {
 		panic(err)
@@ -16,7 +15,7 @@ func LecturaTokens() map[int]string {
 	tokensString := string(tokensBytes)
 	tokensSplit := strings.Split(tokensString, "\n")
 
-	mapaTokens := make(map[int]string)
+	mapaTokens := make(map[string]int)
 
 	for i := 0; i < len(tokensSplit); i++ {
 		lineaActual := tokensSplit[i]
@@ -26,93 +25,119 @@ func LecturaTokens() map[int]string {
 			key := strings.TrimSpace(partesDeLinea[0])
 			token := strings.TrimSpace(partesDeLinea[1])
 
-			token = strings.ReplaceAll(token, `"`, "")
+			token = strings.Trim(token, `",`)
 
 			keyEntero, err := strconv.Atoi(key)
 			if err == nil {
-				mapaTokens[keyEntero] = token
+				mapaTokens[token] = keyEntero
 			}
 		}
 	}
 	return mapaTokens
 }
 
-func separadorLexico() []string {
-
-	expresion, err := os.ReadFile("sql.txt")
+func AnalizadorLexico() []string {
+	sqlBytes, err := os.ReadFile("sql.txt")
 	if err != nil {
 		panic(err)
 	}
 
-	slice := []string{} //slice vacio
+	is := []string{}
 	palabraActual := ""
+	dentroDeComillas := false
+	caracteresEspeciales := []byte{'.', '_', ',', ' ', ';', '*', '+', '/', '=', '(', ')', '<', '>', '!', '%', '$', '@', '@', '&',
+		'|', '^', '`', '~', '?', ':', '"', '\'', '[', ']', '\n'}
 
-	for i := 0; i < len(expresion); i++ {
-		caracter := expresion[i]
+	for i := 0; i < len(sqlBytes); i++ {
+		caracter := sqlBytes[i]
 
-		if caracter == ' ' || caracter == '\n' || caracter == ',' {
+		if caracter == '\'' {
+			if !dentroDeComillas {
+				is = append(is, "'")
+				dentroDeComillas = true
+			} else {
+				is = append(is, palabraActual)
+				is = append(is, "'")
+				dentroDeComillas = false
+				palabraActual = ""
+			}
+		} else if dentroDeComillas {
+			if caracter == '\\' {
+				i++
+				continue
+			}
+			palabraActual += string(caracter)
+		} else if Contiene(caracteresEspeciales, caracter) {
 			if palabraActual != "" {
-				slice = append(slice, palabraActual)
+				is = append(is, palabraActual)
+				palabraActual = ""
 			}
-			if caracter == '\n' {
-				slice = append(slice, "\n")
-			} else if caracter == ',' {
-				slice = append(slice, ",")
-			}
-			palabraActual = ""
-		} else if caracter == '=' || caracter == '\'' || caracter == '(' || caracter == ')' || caracter == '*' {
-			if palabraActual != "" {
-				slice = append(slice, palabraActual)
-			}
-			slice = append(slice, string(caracter))
-			palabraActual = ""
+			is = append(is, string(caracter))
 		} else {
 			palabraActual += string(caracter)
 		}
 	}
 
 	if palabraActual != "" {
-		slice = append(slice, palabraActual)
+		is = append(is, palabraActual)
 	}
 
-	return slice
+	//PARA PRUEBAS
+	//for _, token := range is {
+	//	if token != " " {
+	//		fmt.Printf("%q, ", token)
+	//	}
+	//}
+	return is
 }
 
-func imprimirTokens(mapa map[int]string, tokens []string) {
-	for _, token := range tokens {
-		limpio := limpiarToken(token)
-		valor, encontrado := buscarValorEnMapa(mapa, limpio)
-		if encontrado {
-			fmt.Printf("%s: %d\n", token, valor)
+func Contiene(slice []byte, elemento byte) bool {
+	for i := 0; i < len(slice); i++ {
+		if slice[i] == elemento {
+			return true
+		}
+	}
+	return false
+}
+
+func MarcarPalabrasUsuario(sliceResultado []int) []int {
+	resultado := make([]int, 0)
+	bandera := false
+
+	for i := 0; i < len(sliceResultado); i++ {
+		token := sliceResultado[i]
+
+		if token == 27 {
+			bandera = !bandera
+			if bandera {
+				resultado = append(resultado, 999)
+			}
+		} else if bandera {
+			resultado = append(resultado, 999)
 		} else {
-			fmt.Printf("Token no encontrado en el mapa: %s\n", token)
+			resultado = append(resultado, token)
 		}
 	}
-}
 
-func buscarValorEnMapa(mapa map[int]string, token string) (int, bool) {
-	limpio := limpiarToken(token)
-	for key, value := range mapa {
-		limpioValor := limpiarToken(value)
-		if limpioValor == limpio {
-			return key, true
-		}
-	}
-	return 0, false
-}
-
-func limpiarToken(token string) string {
-	var limpio strings.Builder
-	for _, r := range token {
-		if unicode.IsLetter(r) || unicode.IsNumber(r) {
-			limpio.WriteRune(unicode.ToUpper(r))
-		}
-	}
-	return limpio.String()
+	return resultado
 }
 
 func main() {
+
+	//analizadorLexico() PARA PRUEBAS
 	mapaTokens := LecturaTokens()
-	tokens := separadorLexico()
-	imprimirTokens(mapaTokens, tokens)
+	datosSQL := AnalizadorLexico()
+
+	var sliceResultado []int
+	for i := 0; i < len(datosSQL); i++ {
+		evaluar := datosSQL[i]
+
+		valor, encontrado := mapaTokens[evaluar]
+		if encontrado {
+			sliceResultado = append(sliceResultado, valor)
+		}
+	}
+	resultado := MarcarPalabrasUsuario(sliceResultado)
+	fmt.Println(resultado)
+	//fmt.Println(sliceResultado) slice sin palabas del usuario.
 }
