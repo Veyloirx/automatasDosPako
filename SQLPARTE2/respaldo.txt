@@ -29,9 +29,9 @@ func LecturaTokens() map[string]int {
 			key := strings.TrimSpace(partesDeLinea[0])
 			token := strings.TrimSpace(partesDeLinea[1])
 
-			//if token != "," {
-			//	token = strings.Trim(token, `",`)
-			//}
+			if token != "," {
+				token = strings.Trim(token, `",`)
+			}
 
 			keyEntero, err := strconv.Atoi(key)
 			if err == nil {
@@ -88,6 +88,7 @@ func AnalizadorLexico() []string {
 		is = append(is, palabraActual)
 	}
 
+	//PARA PRUEBAS
 	//for _, token := range is {
 	//	if token != " " {
 	//		fmt.Printf("%q, ", token)
@@ -109,32 +110,26 @@ func main() {
 	mapaTokens := LecturaTokens()
 	datosSQL := AnalizadorLexico()
 
-	var sliceResultadoNumerico []int
+	var sliceResultado []int
 	var sliceCadenasUsuario []string
 
 	for i := 0; i < len(datosSQL); i++ {
-
 		buscar := datosSQL[i]
 
 		valor, encontrado := mapaTokens[buscar]
-
 		if buscar == "\n" {
-			//mapaResultado[30] = `\n`
-			sliceResultadoNumerico = append(sliceResultadoNumerico, 30)
+			sliceResultado = append(sliceResultado, 30)
 		}
 		if encontrado {
-			//mapaResultado[valor] = buscar
-			sliceResultadoNumerico = append(sliceResultadoNumerico, valor)
+			sliceResultado = append(sliceResultado, valor)
 		} else {
 			buscar = strings.TrimSpace(buscar)
 			if buscar != "" {
-				//fmt.Println(buscar)
-				//mapaResultado[999] = buscar
-				sliceResultadoNumerico = append(sliceResultadoNumerico, 999)
+				fmt.Println(buscar)
+				sliceResultado = append(sliceResultado, 999)
 				sliceCadenasUsuario = append(sliceCadenasUsuario, buscar)
 			}
 		}
 	}
-	fmt.Println(sliceResultadoNumerico)
-	fmt.Println(sliceCadenasUsuario)
+	fmt.Println(sliceResultado)
 }
