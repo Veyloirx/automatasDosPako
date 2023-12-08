@@ -49,6 +49,9 @@ func AnalizadorLexico2() []string {
 		panic(err)
 	}
 
+	sqlString := string(sqlBytes)
+	fmt.Println("Lectura del archivo SQL:", sqlString)
+
 	is := []string{}
 	palabraActual := ""
 	dentroDeComillas := false
@@ -107,8 +110,8 @@ func Contiene2(slice []byte, elemento byte) bool {
 	return false
 }
 
-func LeerReglas() map[string][]int {
-	reglas := make(map[string][]int)
+func LeerReglas() [][]int {
+	var reglas [][]int
 
 	contenido, err := os.ReadFile("sintactico.txt")
 	if err != nil {
@@ -119,7 +122,11 @@ func LeerReglas() map[string][]int {
 	for _, linea := range lineas {
 		parts := strings.Split(linea, ":")
 		if len(parts) == 2 {
-			palabraClave := strings.TrimSpace(parts[0])
+			numero, err := strconv.Atoi(strings.TrimSpace(parts[0]))
+			if err != nil {
+				panic(err)
+			}
+
 			numerosStr := strings.Split(parts[1], ",")
 			var numeros []int
 
@@ -130,8 +137,8 @@ func LeerReglas() map[string][]int {
 				}
 				numeros = append(numeros, num)
 			}
-
-			reglas[palabraClave] = numeros
+			regla := append([]int{numero}, numeros...)
+			reglas = append(reglas, regla)
 		}
 	}
 	return reglas
@@ -152,7 +159,7 @@ func main() {
 
 		valor, encontrado := mapaTokens[buscar]
 		if buscar == "\n" {
-			sliceResultado = append(sliceResultado, 30)
+			sliceResultado = append(sliceResultado, 30) //ASIGNAMOS EL TOKEN 30 PARA EL SALTO DE LINEA
 		}
 		if encontrado {
 			sliceResultado = append(sliceResultado, valor)
@@ -183,15 +190,22 @@ func main() {
 
 	reglas := LeerReglas()
 	resultado := sliceResultado
+	fmt.Println("Tokens del archivo SQL: ", resultado)
+	fmt.Println("Arreglo de reglas: ", reglas)
 
 	if ValidarSintaxis(resultado, reglas) {
-		fmt.Println("Sin errores.")
+		fmt.Println("Al buscar el arreglo de tokens dentro del arreglo de reglas, no se han encontrado errores.")
 	} else {
-		fmt.Println("Error de sintaxis")
+		fmt.Println("No se encontre el arreglo de tokens dentro del arreglo de reglas")
 	}
 }
 
-func ValidarSintaxis(resultadoSlice []int, reglasSlice map[string][]int) bool {
-
-	return reflect.DeepEqual(resultadoSlice, reglasSlice)
+func ValidarSintaxis(resultadoSlice []int, reglas [][]int) bool {
+	for i := 0; i < len(reglas); i++ {
+		regla := reglas[i]
+		if reflect.DeepEqual(resultadoSlice, regla) {
+			return true
+		}
+	}
+	return false
 }
